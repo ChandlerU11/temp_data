@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+<script>
+
+  // set the dimensions and margins of the graph
+  var margin = {top: 30, right: 30, bottom: 30, left: 60},
+    width = 1150 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+  
+  // append the svg object to the body of the page
+  var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+  
+  // Labels of row and columns
+  var myGroups = ["1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020"]
+  var myVars = ['Janurary','February', 'March','April','May', 'June','July','August','September','October','November','December']
+  
+  // Build X scales and axis:
+  var x = d3.scaleBand()
+    .range([ 0, width -100 ])
+    .domain(myGroups)
+    .padding(0.01);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x))
+  
+  // Build X scales and axis:
+  var y = d3.scaleBand()
+    .range([ height, 0 ])
+    .domain(myVars)
+    .padding(0.01);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+  
+  // Build color scale
+  var myColor = d3.scaleLinear()
+      .range(["#abd9e9","#2c7bb6","#ffffbf", "#fdae61", "#d7191c"])
+      .domain([28,37,51,65,75])
+  // create a list of keys
+  var keys = [28,37,51,65,75]
+  // Add one dot in the legend for each name.
+    var size = 20
+    svg.selectAll("mydots")
+      .data(keys)
+      .enter()
+      .append("rect")
+        .attr("x", 1000)
+        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", size)
+        .attr("height", size)
+        .style("fill", function(d){ return myColor(d)})
+    
+    // Add one dot in the legend for each name.
+    svg.selectAll("mylabels")
+      .data(keys)
+      .enter()
+      .append("text")
+        .attr("x", 1000 + size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        //.style("fill", function(d){ return color(d)})
+        .text(function(d){ return d + " F"})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+  
+  //Read the data
+  d3.csv("https://github.com/ChandlerU11/temp_data/blob/main/temp_map.csv", function(data) {
+  
+    // create a tooltip
+    var tooltip = d3.select("#my_dataviz")
+      .append("div")
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "2px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+      .style("width", "350px")
+  
+    // Three function that change the tooltip when user hover / move / leave a cell
+    var mouseover = function(d) {
+      tooltip.style("opacity", 1)
+
+    }
+    var mousemove = function(d) {
+      tooltip
+        .html("Average Temperature in " + d.month_name + ", " + d.years + ": " + d.AVG)
+        .style("left", (d3.mouse(this)[0]+70) + "px")
+        .style("top", (d3.mouse(this)[1]) + "px")
+    }
+    var mouseleave = function(d) {
+      tooltip.style("opacity", 0)
+    }
+  
+    // add the squares
+    svg.selectAll()
+      .data(data, function(d) {return d.years+':'+d.month_name;})
+      .enter()
+      .append("rect")
+        .attr("x", function(d) { return x(d.years) })
+        .attr("y", function(d) { return y(d.month_name) })
+        .attr("width", x.bandwidth() )
+        .attr("height", y.bandwidth() )
+        .style("fill", function(d) { return myColor(d.AVG)} )
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
+  })
+
+  </script>
